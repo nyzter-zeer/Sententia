@@ -1,4 +1,4 @@
-# Traductor de Juegos en Tiempo Real
+# Sententia
 
 Aplicación de escritorio **sin necesidad de instalar Python** para traducir juegos en tiempo real mediante OCR.
 

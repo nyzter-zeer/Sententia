@@ -1,5 +1,5 @@
 {
-  "name": "traductor-juegos",
+  "name": "sententia",
   "version": "1.3.0",
   "description": "Traductor de juegos en tiempo real con OCR",
   "author": "nyzter-zeer",
@@ -18,8 +18,8 @@
     "electron-builder": "^24.13.3"
   },
   "build": {
-    "appId": "com.traductor.juegos",
-    "productName": "Traductor de Juegos",
+    "appId": "com.nyzter.sententia",
+    "productName": "Sententia",
     "copyright": "2026",
     "win": {
       "target": [
@@ -38,7 +38,7 @@
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "shortcutName": "Traductor de Juegos"
+      "shortcutName": "Sententia"
     },
     "files": [
       "**/*",
