@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Traductor de Juegos en Tiempo Real</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <!-- Titlebar personalizado -->
+  <div class="titlebar">
+    <div class="titlebar-left">
+      <span class="titlebar-icon">🎮</span>
+      <span class="titlebar-title">Traductor de Juegos</span>
+      <span class="titlebar-badge">TIEMPO REAL</span>
+    </div>
+    <div class="titlebar-drag"></div>
+  </div>
+
+  <!-- Layout principal -->
+  <div class="app-layout">
+
+    <!-- ─── Sidebar ──────────────────────────────────────────────── -->
+    <aside class="sidebar">
+      
+      <!-- Logo -->
+      <div class="sidebar-logo">
+        <div class="logo-icon">🎮</div>
+        <div class="logo-text">
+          <span class="logo-name">Traductor</span>
+          <span class="logo-sub">de Juegos · OCR</span>
+        </div>
+      </div>
+
+      <div class="sidebar-divider"></div>
+
+      <!-- Idiomas -->
+      <div class="sidebar-section">
+        <div class="section-label">IDIOMAS</div>
+
+        <div class="field-group">
+          <label class="field-label">Idioma Origen</label>
+          <select id="sel-source" class="select-input">
+            <option value="auto">🔍 Auto-detectar</option>
+            <option value="ja">🇯🇵 Japonés</option>
+            <option value="zh-CN">🇨🇳 Chino Simplificado</option>
+            <option value="zh-TW">🇹🇼 Chino Tradicional</option>
+            <option value="en">🇬🇧 Inglés</option>
+          </select>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Idioma Destino</label>
+          <select id="sel-target" class="select-input">
+            <option value="es" selected>🇪🇸 Español</option>
+            <option value="en">🇬🇧 Inglés</option>
+            <option value="pt">🇧🇷 Portugués</option>
+            <option value="fr">🇫🇷 Francés</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="sidebar-divider"></div>
+
+      <!-- Proveedor -->
+      <div class="sidebar-section">
+        <div class="section-label">TRADUCCIÓN</div>
+
+        <div class="field-group">
+          <label class="field-label">Proveedor</label>
+          <select id="sel-provider" class="select-input">
+            <option value="google">Google (Libre)</option>
+            <option value="deepl">DeepL API</option>
+          </select>
+        </div>
+
+        <div id="deepl-config" class="field-group" style="display: none;">
+          <label class="field-label">DeepL API Key</label>
+          <input type="password" id="input-deepl-key" class="text-input" placeholder="Pegar API Key aquí..." />
+        </div>
+      </div>
+
+      <div class="sidebar-divider"></div>
+
+      <!-- OCR -->
+      <div class="sidebar-section">
+        <div class="section-label">OCR</div>
+
+        <div class="field-group">
+          <label class="field-label">Motor de texto</label>
+          <select id="sel-ocr-lang" class="select-input">
+            <option value="jpn+chi_sim+eng">Auto (JA+ZH+EN)</option>
+            <option value="jpn">Japonés</option>
+            <option value="chi_sim">Chino Simplificado</option>
+            <option value="chi_tra">Chino Tradicional</option>
+            <option value="eng">Inglés</option>
+          </select>
+        </div>
+
+        <!-- OCR Status -->
+        <div class="ocr-status" id="ocr-status">
+          <div class="status-dot" id="ocr-dot"></div>
+          <span id="ocr-status-text">Inicializando OCR...</span>
+        </div>
+      </div>
+
+      <div class="sidebar-divider"></div>
+
+      <!-- Velocidad -->
+      <div class="sidebar-section">
+        <div class="section-label">VELOCIDAD</div>
+        <div class="field-group">
+          <div class="slider-header">
+            <label class="field-label">Intervalo de captura</label>
+            <span class="slider-value" id="interval-val">1.5s</span>
+          </div>
+          <input type="range" id="slider-interval" class="slider"
+            min="500" max="5000" step="100" value="1500" />
+          <div class="slider-labels">
+            <span>Rápido</span>
+            <span>Lento</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-divider"></div>
+
+      <!-- Overlay -->
+      <div class="sidebar-section">
+        <div class="section-label">OVERLAY</div>
+        <div class="field-group">
+          <div class="slider-header">
+            <label class="field-label">Opacidad</label>
+            <span class="slider-value" id="opacity-val">92%</span>
+          </div>
+          <input type="range" id="slider-opacity" class="slider"
+            min="20" max="100" step="5" value="92" />
+        </div>
+        <div class="field-group">
+          <div class="slider-header">
+            <label class="field-label">Tamaño de fuente</label>
+            <span class="slider-value" id="fontsize-val">15px</span>
+          </div>
+          <input type="range" id="slider-fontsize" class="slider"
+            min="10" max="28" step="1" value="15" />
+        </div>
+      </div>
+
+      <div class="sidebar-spacer"></div>
+
+      <!-- Versión -->
+      <div class="sidebar-footer">
+        <span id="app-version">v1.2.0</span>
+        <span class="footer-dot">·</span>
+        <span>Electron + Tesseract.js</span>
+      </div>
+    </aside>
+
+    <!-- ─── Panel Principal ─────────────────────────────────────── -->
+    <main class="main-panel">
+
+      <!-- Barra de control -->
+      <div class="control-bar">
+        <button id="btn-region" class="btn btn-secondary" title="Seleccionar área de texto">
+          <span class="btn-icon">📐</span>
+          <span>Seleccionar Región</span>
+        </button>
+
+        <button id="btn-start" class="btn btn-success" title="Iniciar traducción">
+          <span class="btn-icon">▶</span>
+          <span>Iniciar</span>
+        </button>
+
+        <button id="btn-pause" class="btn btn-warning" disabled title="Pausar">
+          <span class="btn-icon">⏸</span>
+          <span>Pausar</span>
+        </button>
+
+        <button id="btn-overlay" class="btn btn-accent" title="Mostrar/ocultar overlay">
+          <span class="btn-icon">🪟</span>
+          <span>Overlay</span>
+        </button>
+
+        <div class="region-info" id="region-info">
+          <span id="region-label">Sin región seleccionada</span>
+        </div>
+
+        <button id="btn-clear" class="btn btn-ghost" title="Limpiar historial">
+          🗑
+        </button>
+      </div>
+
+      <!-- Paneles de texto -->
+      <div class="text-panels">
+        <!-- OCR original -->
+        <div class="text-card">
+          <div class="card-header">
+            <span class="card-title">TEXTO DETECTADO (OCR)</span>
+            <span class="card-badge" id="badge-lang">—</span>
+          </div>
+          <div class="text-content" id="ocr-text">
+            <span class="placeholder">El texto del juego aparecerá aquí...</span>
+          </div>
+        </div>
+
+        <!-- Traducción -->
+        <div class="text-card text-card--accent">
+          <div class="card-header">
+            <span class="card-title">TRADUCCIÓN</span>
+            <div class="copy-btn" id="btn-copy" title="Copiar traducción">
+              <span>📋</span>
+            </div>
+          </div>
+          <div class="text-content text-content--translation" id="translated-text">
+            <span class="placeholder">La traducción al español aparecerá aquí...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Historial -->
+      <div class="history-panel">
+        <div class="history-header">
+          <span class="card-title">HISTORIAL DE TRADUCCIONES</span>
+          <span class="cache-info" id="cache-info">Caché: 0 frases</span>
+        </div>
+        <div class="history-list" id="history-list">
+          <div class="history-empty">El historial aparecerá aquí cuando inicies la traducción</div>
+        </div>
+      </div>
+
+      <!-- Barra de estado -->
+      <div class="status-bar">
+        <div class="status-indicator" id="status-indicator">
+          <div class="status-dot status-dot--idle"></div>
+          <span id="status-text">Listo</span>
+        </div>
+        <div class="status-right">
+          <span id="frames-count">0 capturas</span>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

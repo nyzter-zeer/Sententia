@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: transparent;
+      cursor: crosshair;
+      user-select: none;
+    }
+
+    canvas {
+      position: fixed;
+      inset: 0;
+      display: block;
+    }
+
+    .instruction {
+      position: fixed;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(13, 17, 23, 0.92);
+      border: 1px solid rgba(45, 140, 255, 0.5);
+      color: #E6EDF3;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 10px 24px;
+      border-radius: 8px;
+      text-align: center;
+      pointer-events: none;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+
+    .instruction span {
+      color: #2D8CFF;
+      font-weight: 700;
+    }
+
+    .size-label {
+      position: fixed;
+      background: rgba(45, 140, 255, 0.9);
+      color: white;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 4px;
+      pointer-events: none;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <div class="instruction">
+    Arrastra para seleccionar el área de texto &nbsp;·&nbsp;
+    <span>ESC</span> para cancelar
+  </div>
+  <div class="size-label" id="size-label">0 × 0</div>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const sizeLabel = document.getElementById('size-label');
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    let startX = 0, startY = 0;
+    let endX = 0, endY = 0;
+    let dragging = false;
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Fondo semi-oscuro
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      if (!dragging) return;
+
+      const x = Math.min(startX, endX);
+      const y = Math.min(startY, endY);
+      const w = Math.abs(endX - startX);
+      const h = Math.abs(endY - startY);
+
+      if (w < 2 || h < 2) return;
+
+      // Recortar la zona seleccionada (más clara)
+      ctx.clearRect(x, y, w, h);
+      ctx.fillStyle = 'rgba(45, 140, 255, 0.08)';
+      ctx.fillRect(x, y, w, h);
+
+      // Borde de selección
+      ctx.strokeStyle = '#2D8CFF';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x, y, w, h);
+
+      // Esquinas
+      const cs = 10;
+      ctx.fillStyle = '#2D8CFF';
+      // Esquina superior izquierda
+      ctx.fillRect(x - 1, y - 1, cs, 2);
+      ctx.fillRect(x - 1, y - 1, 2, cs);
+      // Esquina superior derecha
+      ctx.fillRect(x + w - cs + 1, y - 1, cs, 2);
+      ctx.fillRect(x + w - 1, y - 1, 2, cs);
+      // Esquina inferior izquierda
+      ctx.fillRect(x - 1, y + h - 1, cs, 2);
+      ctx.fillRect(x - 1, y + h - cs + 1, 2, cs);
+      // Esquina inferior derecha
+      ctx.fillRect(x + w - cs + 1, y + h - 1, cs, 2);
+      ctx.fillRect(x + w - 1, y + h - cs + 1, 2, cs);
+
+      // Etiqueta de tamaño
+      sizeLabel.style.display = 'block';
+      sizeLabel.textContent = `${Math.round(w)} × ${Math.round(h)}`;
+      sizeLabel.style.left = `${x + w / 2 - 30}px`;
+      sizeLabel.style.top = `${y - 28}px`;
+      if (y < 30) sizeLabel.style.top = `${y + h + 6}px`;
+    }
+
+    canvas.addEventListener('mousedown', e => {
+      startX = e.clientX;
+      startY = e.clientY;
+      endX = e.clientX;
+      endY = e.clientY;
+      dragging = true;
+    });
+
+    canvas.addEventListener('mousemove', e => {
+      if (!dragging) return;
+      endX = e.clientX;
+      endY = e.clientY;
+      draw();
+    });
+
+    canvas.addEventListener('mouseup', e => {
+      endX = e.clientX;
+      endY = e.clientY;
+      dragging = false;
+      sizeLabel.style.display = 'none';
+
+      const x = Math.min(startX, endX);
+      const y = Math.min(startY, endY);
+      const w = Math.abs(endX - startX);
+      const h = Math.abs(endY - startY);
+
+      if (w > 10 && h > 10) {
+        window.api.selectorDone({
+          x,
+          y,
+          width: w,
+          height: h,
+          screenWidth: window.innerWidth,
+          screenHeight: window.innerHeight
+        });
+      }
+    });
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        window.api.selectorCancel();
+      }
+    });
+  </script>
+</body>
+</html>

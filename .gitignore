@@ -1,0 +1,14 @@
+# Dependencias de Node
+node_modules/
+node_portable/
+
+# Archivos compilados e instaladores
+dist/
+
+# Configuración y datos locales de usuario
+config.json
+*.log
+
+# Archivos temporales y del sistema
+.DS_Store
+Thumbs.db

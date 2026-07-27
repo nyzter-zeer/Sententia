@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: transparent;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      -webkit-app-region: no-drag;
+    }
+
+    /* Overlay de traducción */
+    .overlay-container {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      border-radius: 12px;
+      overflow: hidden;
+      background: rgba(13, 17, 23, 0.88);
+      border: 1px solid rgba(48, 54, 61, 0.8);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+    }
+
+    /* Barra de título (arrastre) */
+    .overlay-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 5px 10px;
+      background: rgba(22, 27, 34, 0.9);
+      border-bottom: 1px solid rgba(48, 54, 61, 0.6);
+      -webkit-app-region: drag;
+      cursor: grab;
+      flex-shrink: 0;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      -webkit-app-region: no-drag;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #484F58;
+      flex-shrink: 0;
+      transition: background 0.3s;
+    }
+    .status-dot.active {
+      background: #39D353;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(57,211,83,0.4); }
+      50%       { opacity: 0.8; box-shadow: 0 0 0 4px rgba(57,211,83,0); }
+    }
+
+    .header-label {
+      font-size: 9px;
+      font-weight: 700;
+      color: rgba(139, 148, 158, 0.8);
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+    }
+
+    .header-right {
+      display: flex;
+      gap: 4px;
+      -webkit-app-region: no-drag;
+    }
+
+    .ctrl-btn {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      font-size: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.15s;
+      background: rgba(48, 54, 61, 0.7);
+      color: rgba(139, 148, 158, 0.8);
+    }
+    .ctrl-btn:hover { opacity: 0.7; }
+    .ctrl-btn.pin-btn { background: rgba(45,140,255,0.2); color: #2D8CFF; }
+
+    /* Texto principal */
+    .overlay-body {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 14px;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .translation-text {
+      font-size: 15px;
+      font-weight: 500;
+      color: #E6EDF3;
+      line-height: 1.5;
+      text-align: center;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+      letter-spacing: 0.2px;
+      word-break: break-word;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+    }
+
+    .translation-text.placeholder {
+      color: rgba(139, 148, 158, 0.5);
+      font-style: italic;
+      font-size: 12px;
+    }
+
+    /* Resize handle */
+    .resize-handle {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 14px;
+      height: 14px;
+      cursor: se-resize;
+      -webkit-app-region: no-drag;
+      opacity: 0.3;
+    }
+    .resize-handle::after {
+      content: '';
+      position: absolute;
+      bottom: 3px;
+      right: 3px;
+      width: 6px;
+      height: 6px;
+      border-right: 2px solid #8B949E;
+      border-bottom: 2px solid #8B949E;
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay-container" id="container">
+    <!-- Header -->
+    <div class="overlay-header">
+      <div class="header-left">
+        <div class="status-dot" id="status-dot"></div>
+        <span class="header-label">Traducción en vivo</span>
+      </div>
+      <div class="header-right">
+        <button class="ctrl-btn pin-btn" id="btn-clickthrough" title="Activar/desactivar click-through">📌</button>
+        <button class="ctrl-btn" id="btn-hide" title="Ocultar overlay">×</button>
+      </div>
+    </div>
+
+    <!-- Texto traducido -->
+    <div class="overlay-body">
+      <div class="translation-text placeholder" id="translation-text">
+        Selecciona una región e inicia la traducción...
+      </div>
+    </div>
+
+    <!-- Resize handle -->
+    <div class="resize-handle" id="resize-handle"></div>
+  </div>
+
+  <script>
+    const dot = document.getElementById('status-dot');
+    const textEl = document.getElementById('translation-text');
+    let clickthroughEnabled = true;
+
+    // --- Aplicar Configuración (Tamaño de fuente) ---
+    function applyFontSize(size) {
+      if (size) {
+        textEl.style.fontSize = `${size}px`;
+      }
+    }
+
+    // Inicializar Configuración
+    async function initConfig() {
+      try {
+        const config = await window.api.getConfig();
+        if (config) {
+          applyFontSize(config.overlayFontSize);
+        }
+      } catch (err) {
+        console.error('Error cargando config inicial en overlay:', err);
+      }
+    }
+    initConfig();
+
+    // Escuchar cambios de configuración
+    window.api.onConfigChanged(config => {
+      if (config && config.overlayFontSize) {
+        applyFontSize(config.overlayFontSize);
+      }
+    });
+
+    // Recibir texto traducido
+    window.api.onUpdateText(text => {
+      if (text) {
+        textEl.textContent = text;
+        textEl.classList.remove('placeholder');
+        // Flash de actualización
+        textEl.style.opacity = '0.6';
+        requestAnimationFrame(() => {
+          textEl.style.transition = 'opacity 0.3s';
+          textEl.style.opacity = '1';
+        });
+      }
+    });
+
+    // Estado activo/inactivo
+    window.api.onSetStatus(active => {
+      dot.className = 'status-dot' + (active ? ' active' : '');
+    });
+
+    // Botón pin (click-through)
+    document.getElementById('btn-clickthrough').addEventListener('click', () => {
+      clickthroughEnabled = !clickthroughEnabled;
+      window.api.overlayClickthrough(clickthroughEnabled);
+      document.getElementById('btn-clickthrough').style.color = clickthroughEnabled ? '#2D8CFF' : '#F0A500';
+    });
+
+    // Botón ocultar
+    document.getElementById('btn-hide').addEventListener('click', () => {
+      window.api.overlayToggle();
+    });
+
+    // --- Redimensionar Ventana por Arrastre ---
+    const resizeHandle = document.getElementById('resize-handle');
+    let isResizing = false;
+    let startWidth = 0;
+    let startHeight = 0;
+    let startMouseX = 0;
+    let startMouseY = 0;
+
+    resizeHandle.addEventListener('mousedown', e => {
+      isResizing = true;
+      startWidth = window.innerWidth;
+      startHeight = window.innerHeight;
+      startMouseX = e.screenX;
+      startMouseY = e.screenY;
+      e.preventDefault();
+      e.stopPropagation();
+    });
+
+    window.addEventListener('mousemove', e => {
+      if (isResizing) {
+        const deltaX = e.screenX - startMouseX;
+        const deltaY = e.screenY - startMouseY;
+        const newWidth = Math.max(300, startWidth + deltaX);
+        const newHeight = Math.max(100, startHeight + deltaY);
+        window.api.overlayResize({ width: newWidth, height: newHeight });
+      }
+    });
+
+    window.addEventListener('mouseup', () => {
+      isResizing = false;
+    });
+
+    // --- Click-through Inteligente ---
+    window.addEventListener('mousemove', e => {
+      if (!isResizing) {
+        const isOverHeader = e.target.closest('.overlay-header');
+        const isOverResize = e.target.closest('#resize-handle');
+        
+        if (isOverHeader || isOverResize) {
+          window.api.overlayClickthrough(false);
+        } else {
+          if (clickthroughEnabled) {
+            window.api.overlayClickthrough(true);
+          } else {
+            window.api.overlayClickthrough(false);
+          }
+        }
+      }
+    });
+
+    document.addEventListener('mouseleave', () => {
+      if (clickthroughEnabled && !isResizing) {
+        window.api.overlayClickthrough(true);
+      }
+    });
+  </script>
+</body>
+</html>
