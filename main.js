@@ -67,6 +67,14 @@ function createMainWindow() {
     show: true,
   });
 
+  // Seguridad: Bloquear navegación y apertura de nuevas ventanas
+  mainWindow.webContents.on('will-navigate', (event) => {
+    event.preventDefault();
+  });
+  mainWindow.webContents.setWindowOpenHandler(() => {
+    return { action: 'deny' };
+  });
+
   mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
     console.error(`[Main] mainWindow failed to load: ${errorCode} - ${errorDescription} (${validatedURL})`);
   });
@@ -108,6 +116,14 @@ function createOverlayWindow() {
       contextIsolation: true,
       nodeIntegration: false,
     },
+  });
+
+  // Seguridad: Bloquear navegación y apertura de nuevas ventanas
+  overlayWindow.webContents.on('will-navigate', (event) => {
+    event.preventDefault();
+  });
+  overlayWindow.webContents.setWindowOpenHandler(() => {
+    return { action: 'deny' };
   });
 
   overlayWindow.loadFile(path.join(__dirname, 'overlay', 'overlay.html'));
@@ -159,6 +175,14 @@ function createSelectorWindow(display) {
       contextIsolation: true,
       nodeIntegration: false,
     },
+  });
+
+  // Seguridad: Bloquear navegación y apertura de nuevas ventanas
+  win.webContents.on('will-navigate', (event) => {
+    event.preventDefault();
+  });
+  win.webContents.setWindowOpenHandler(() => {
+    return { action: 'deny' };
   });
 
   win.loadFile(path.join(__dirname, 'selector', 'selector.html'));
