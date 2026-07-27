@@ -1,4 +1,4 @@
-# Sententia v1.3.0
+# Sententia v1.3.1
 
 > **Sententia** is a high-performance desktop application designed to translate games and apps in real-time using OCR (Optical Character Recognition).
 >
@@ -7,7 +7,7 @@
 ---
 
 ### 📥 Downloads & Releases / Descargas y Lanzamientos
-* 🚀 **[Latest Release (v1.3.0) / Última Versión (v1.3.0)](https://github.com/nyzter-zeer/Sententia/releases/latest)**
+* 🚀 **[Latest Release (v1.3.1) / Última Versión (v1.3.1)](https://github.com/nyzter-zeer/Sententia/releases/latest)**
   * **Installer / Instalador (`.exe`)**: Standard setup wizard for Windows / Asistente de instalación estándar para Windows.
   * **Portable Executable / Ejecutable Portable (`.exe`)**: Run directly without installation / Ejecutable independiente listo para usar sin instalar.
 
