@@ -4,6 +4,15 @@
 >
 > **Sententia** es una aplicación de escritorio de alto rendimiento diseñada para traducir juegos y aplicaciones en tiempo real mediante OCR (Reconocimiento Óptico de Caracteres).
 
+---
+
+### 📥 Downloads & Releases / Descargas y Lanzamientos
+* 🚀 **[Latest Release (v1.3.0) / Última Versión (v1.3.0)](https://github.com/nyzter-zeer/Sententia/releases/latest)**
+  * **Installer / Instalador (`.exe`)**: Standard setup wizard for Windows / Asistente de instalación estándar para Windows.
+  * **Portable Executable / Ejecutable Portable (`.exe`)**: Run directly without installation / Ejecutable independiente listo para usar sin instalar.
+
+---
+
 [English](#english) | [Español](#español)
 
 ---
